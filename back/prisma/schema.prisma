@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model countries {
+  id      Int       @id @default(autoincrement())
+  name    String    @db.VarChar(50)
+  offices offices[]
+}
+
+model offices {
+  id        Int       @id @default(autoincrement())
+  countryid Int
+  title     String    @db.VarChar(50)
+  phone     String    @db.VarChar(50)
+  contact   String    @db.VarChar(250)
+  countries countries @relation(fields: [countryid], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users     users[]
+}
+
+model roles {
+  id    Int     @id @default(autoincrement())
+  title String  @db.VarChar(50)
+  users users[]
+}
+
+model user_sessions {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  loginTime     DateTime  @default(now())
+  logoutTime    DateTime?
+  errorOccurred Boolean?  @default(false)
+  errorMessage  String?
+  users         users     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model users {
+  id        Int             @id @default(autoincrement())
+  roleid    Int             @default(2)
+  email     String          @db.VarChar(150)
+  password  String          @db.VarChar(200)
+  title     String          @default("user")
+  firstname String?         @db.VarChar(50)
+  lastname  String          @db.VarChar(50)
+  officeid  Int?
+  birthdate DateTime?       @db.Date
+  active    Boolean?
+  offices   offices?        @relation(fields: [officeid], references: [id], onUpdate: NoAction)
+  roles     roles           @relation(fields: [roleid], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sessions  user_sessions[]
+}
