@@ -20,9 +20,8 @@ model offices {
   title     String    @db.VarChar(50)
   phone     String    @db.VarChar(50)
   contact   String    @db.VarChar(250)
-  countries countries @relation(fields: [countryid], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  users users[]
+  countries countries @relation(fields: [countryid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_office_country")
+  users     users[]
 }
 
 model roles {
@@ -55,8 +54,9 @@ model users {
   offices   offices?        @relation(fields: [officeid], references: [id], onUpdate: NoAction)
   roles     roles           @relation(fields: [roleid], references: [id], onDelete: Cascade, onUpdate: NoAction)
   sessions  user_sessions[]
-}
 
+  tickets tickets[] @relation(map: "fk_ticket_user")
+}
 
 model aircrafts {
   id            Int         @id @default(autoincrement())
@@ -73,9 +73,9 @@ model airports {
   countryid                                  Int
   iatacode                                   String    @db.VarChar(3)
   name                                       String?   @db.VarChar(50)
-  countries                                  countries @relation(fields: [countryid], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  routes_routes_arrivalairportidToairports   routes[]  @relation("routes_arrivalairportidToairports")
+  countries                                  countries @relation(fields: [countryid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_airport_country")
   routes_routes_departureairportidToairports routes[]  @relation("routes_departureairportidToairports")
+  routes_routes_arrivalairportidToairports   routes[]  @relation("routes_arrivalairportidToairports")
 }
 
 model routes {
@@ -84,8 +84,8 @@ model routes {
   arrivalairportid                             Int
   distance                                     Int
   flighttime                                   Int
-  airports_routes_arrivalairportidToairports   airports    @relation("routes_arrivalairportidToairports", fields: [arrivalairportid], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  airports_routes_departureairportidToairports airports    @relation("routes_departureairportidToairports", fields: [departureairportid], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  airports_routes_departureairportidToairports airports    @relation("routes_departureairportidToairports", fields: [departureairportid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_routes_airports2")
+  airports_routes_arrivalairportidToairports   airports    @relation("routes_arrivalairportidToairports", fields: [arrivalairportid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_routes_airports3")
   schedules                                    schedules[]
 }
 
@@ -95,12 +95,62 @@ model schedules {
   time         DateTime  @db.Time(6)
   aircraftid   Int
   routeid      Int
-  economyprice Float
+  economyprice Decimal   @db.Decimal(19, 4)
   confirmed    Boolean
   flightnumber String?   @db.VarChar(10)
-  aircrafts    aircrafts @relation(fields: [aircraftid], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  routes       routes    @relation(fields: [routeid], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  aircrafts    aircrafts @relation(fields: [aircraftid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_schedule_aircraft")
+  routes       routes    @relation(fields: [routeid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_schedule_routes")
+  tickets      tickets[]
 }
 
+model amenities {
+  id                 Int                  @id @default(autoincrement())
+  service            String               @db.VarChar(50)
+  price              Decimal              @db.Decimal(19, 4)
+  amenitiescabintype amenitiescabintype[]
+  amenitiestickets   amenitiestickets[]
+}
 
+model amenitiescabintype {
+  cabintypeid Int
+  amenityid   Int
+  amenities   amenities  @relation(fields: [amenityid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_travelclassadditionalservice_additionalservice")
+  cabintypes  cabintypes @relation(fields: [cabintypeid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_travelclassadditionalservice_travelclass")
 
+  @@id([cabintypeid, amenityid])
+}
+
+model amenitiestickets {
+  amenityid Int
+  ticketid  Int
+  price     Decimal   @default(0.0000) @db.Decimal(19, 4)
+  amenities amenities @relation(fields: [amenityid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_amenitiestickets_amenities")
+  tickets   tickets   @relation(fields: [ticketid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_amenitiestickets_tickets")
+
+  @@id([amenityid, ticketid])
+}
+
+model cabintypes {
+  id                 Int                  @id @default(autoincrement())
+  name               String               @db.VarChar(50)
+  amenitiescabintype amenitiescabintype[]
+  tickets            tickets[]
+}
+
+model tickets {
+  id                Int                @id @default(autoincrement())
+  userid            Int
+  scheduleid        Int
+  cabintypeid       Int
+  firstname         String             @db.VarChar(50)
+  lastname          String             @db.VarChar(50)
+  phone             String             @db.VarChar(14)
+  passportnumber    String             @db.VarChar(9)
+  passportcountryid Int
+  bookingreference  String             @db.VarChar(6)
+  confirmed         Boolean            @default(false)
+  amenitiestickets  amenitiestickets[]
+  schedules         schedules          @relation(fields: [scheduleid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ticket_schedule")
+  cabintypes        cabintypes         @relation(fields: [cabintypeid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ticket_travelclass")
+  users             users              @relation(fields: [userid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ticket_user")
+}
