@@ -1,25 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma.service';
-import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
-import * as fs from 'fs';
-import * as readline from 'readline';
+
 @Injectable()
 export class SchedulesService {
-    constructor(private prisma: PrismaService) { }
-
+    constructor(private prisma: PrismaService) {}
 
     async searchSchedules(
         departureAirportCode?: string,
         arrivalAirportCode?: string,
         flightDate?: Date,
-        flightNumber?: string,
-        sortBy: Array<{ field: 'date' | 'economyPrice' | 'confirmed', order: 'asc' | 'desc' }> = [{ field: 'date', order: 'asc' }],
+        returnFlightDate?: Date,
+        ticketClass: 'economy' | 'business' | 'first' = 'economy',
+        flexibleDates: boolean = false,
+        sortBy: Array<{ field: 'date' | 'economyPrice' | 'confirmed', order: 'asc' | 'desc' }> = [{ field: 'date', order: 'asc' }]
     ) {
         if (departureAirportCode && arrivalAirportCode && departureAirportCode === arrivalAirportCode) {
             throw new Error('Аэропорт отправления и прибытия не могут быть одинаковыми');
         }
-
 
         const where: any = {};
 
@@ -30,6 +28,7 @@ export class SchedulesService {
                 },
             };
         }
+
         if (arrivalAirportCode) {
             where.routes = {
                 ...where.routes,
@@ -38,20 +37,35 @@ export class SchedulesService {
                 },
             };
         }
+
         if (flightDate) {
-            where.date = flightDate;
-        }
-        if (flightNumber) {
-            where.flightnumber = flightNumber;
+            if (flexibleDates) {
+                const startDate = new Date(flightDate);
+                startDate.setDate(flightDate.getDate() - 3);
+
+                const endDate = new Date(flightDate);
+                endDate.setDate(flightDate.getDate() + 3);
+
+                where.date = {
+                    gte: startDate,
+                    lte: endDate,
+                };
+            } else {
+                where.date = flightDate;
+            }
         }
 
+        if (returnFlightDate) {
+            if (returnFlightDate <= flightDate) {
+                throw new Error('Обратный рейс должен быть позже даты вылета');
+            }
+        }
 
         const orderBy = sortBy.map((sortCriteria) => ({
             [sortCriteria.field]: sortCriteria.order,
         }));
 
-
-        return this.prisma.schedules.findMany({
+        let schedules = await this.prisma.schedules.findMany({
             where,
             orderBy,
             include: {
@@ -64,8 +78,25 @@ export class SchedulesService {
                 },
             },
         });
-    }
 
+        schedules = schedules.map(schedule => {
+            let priceMultiplier = 1;
+
+            if (ticketClass === 'business') {
+                priceMultiplier = 1.35;
+            } else if (ticketClass === 'first') {
+                priceMultiplier = 1.35 * 1.30;
+            }
+
+            const finalPrice = Math.floor(schedule.economyprice.toNumber() * priceMultiplier);
+            return {
+                ...schedule,
+                finalPrice,
+            };
+        });
+
+        return schedules;
+    }
 
     async toggleFlightStatus(id: number) {
         const schedule = await this.prisma.schedules.findUnique({
@@ -80,13 +111,11 @@ export class SchedulesService {
         });
     }
 
-
     async create(createScheduleDto: CreateScheduleDto) {
         return this.prisma.schedules.create({
             data: createScheduleDto,
         });
     }
-
 
     async findAll() {
         return this.prisma.schedules.findMany({
@@ -101,7 +130,6 @@ export class SchedulesService {
             },
         });
     }
-
 
     async findOne(id: number) {
         return this.prisma.schedules.findUnique({
@@ -118,38 +146,16 @@ export class SchedulesService {
         });
     }
 
-
-    async update(id: number, updateScheduleDto: UpdateScheduleDto) {
+    async update(id: number, updateScheduleDto: CreateScheduleDto) {
         return this.prisma.schedules.update({
             where: { id },
             data: updateScheduleDto,
         });
     }
 
-
     async remove(id: number) {
         return this.prisma.schedules.delete({
             where: { id },
         });
-    }
-
-    async processFile(filePath: string) {
-        const fileStream = fs.createReadStream(filePath);
-        const rl = readline.createInterface({
-            input: fileStream,
-            crlfDelay: Infinity
-        });
-
-        for await (const line of rl) {
-            const [action, flightDate, flightNumber, departureAirport, arrivalAirport, aircraftCode, basePrice, status] = line.split(',');
-
-            if (action === 'ADD') {
-                // Логика добавления рейса
-                return
-            } else if (action === 'EDIT') {
-                // Логика редактирования рейса
-                return
-            }
-        }
     }
 }

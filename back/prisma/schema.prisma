@@ -144,6 +144,7 @@ model tickets {
   cabintypeid       Int
   firstname         String             @db.VarChar(50)
   lastname          String             @db.VarChar(50)
+  email             String
   phone             String             @db.VarChar(14)
   passportnumber    String             @db.VarChar(9)
   passportcountryid Int
@@ -153,4 +154,18 @@ model tickets {
   schedules         schedules          @relation(fields: [scheduleid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ticket_schedule")
   cabintypes        cabintypes         @relation(fields: [cabintypeid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ticket_travelclass")
   users             users              @relation(fields: [userid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ticket_user")
+}
+
+
+model Survey {
+  id          Int      @id @default(autoincrement())
+  departure   String
+  arrival     String
+  age         Int
+  gender      String
+  cabinType   String
+  q1          Int
+  q2          Int
+  q3          Int
+  q4          Int
 }

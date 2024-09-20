@@ -30,7 +30,6 @@ export class SchedulesController {
       departureAirportCode,
       arrivalAirportCode,
       parsedFlightDate,
-      flightNumber,
       parsedSortBy,
     );
   }

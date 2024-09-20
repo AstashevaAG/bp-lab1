@@ -4,6 +4,11 @@ import { AuthModule } from './auth/auth.module'
 import { UserModule } from './user/user.module'
 import { RoleModule } from './role/role.module';
 import { SchedulesModule } from './schedules/schedules.module';
+import { SurveyModule } from './survey/survey.module';
+import { BookingModule } from './booking/booking.module';
+import { AmenitiesModule } from './amenities/amenities.module';
+import { PurchaseModule } from './purchase/purchase.module';
+import { ReportModule } from './report/report.module';
 
 @Module({
 	imports: [
@@ -13,7 +18,12 @@ import { SchedulesModule } from './schedules/schedules.module';
 		AuthModule,
 		UserModule,
 		RoleModule,
-		SchedulesModule
+		SchedulesModule,
+		SurveyModule,
+		BookingModule,
+		AmenitiesModule,
+		PurchaseModule,
+		ReportModule
 	]
 })
 export class AppModule {}
