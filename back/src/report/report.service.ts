@@ -1,39 +1,46 @@
-import { PrismaService } from '@/prisma.service'
-import { Injectable } from '@nestjs/common'
+import { PrismaService } from '@/prisma.service';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ReportService {
-	constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
-	async generateServiceReport(flightNumber?: string, flightDate?: Date) {
-		const query = {
-			where: {
-				confirmed: true,
-				schedules: {
-					date: flightDate ? flightDate : { gte: new Date() },
-					flightnumber: flightNumber ? flightNumber : undefined
-				}
-			},
-			include: {
-				amenitiestickets: {
-					include: {
-						amenities: true
-					}
-				},
-				schedules: true
-			}
-		}
+  async getAmenitiesReport(filter: { startDate?: Date; endDate?: Date; flightNumber?: string; flightDate?: Date }) {
+    const { startDate, endDate, flightNumber, flightDate } = filter;
 
-		const tickets = await this.prisma.tickets.findMany(query)
+    let scheduleQuery = {};
 
-		const servicesReport = tickets.flatMap(ticket =>
-			ticket.amenitiestickets.map(at => ({
-				flightNumber: ticket.schedules.flightnumber,
-				service: at.amenities.service,
-				price: at.price
-			}))
-		)
+    if (startDate && endDate) {
+      scheduleQuery = {
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      };
+    } else if (flightNumber && flightDate) {
+      scheduleQuery = {
+        flightnumber: flightNumber,
+        date: flightDate,
+      };
+    }
 
-		return servicesReport
-	}
+    const amenitiesReport = await this.prisma.amenities.findMany({
+      select: {
+        id: true,
+        service: true,
+        amenitiestickets: {
+          where: {
+            tickets: {
+              schedules: scheduleQuery,
+            },
+          },
+        },
+      },
+    });
+
+    return amenitiesReport.map((amenity) => ({
+      service: amenity.service,
+      count: amenity.amenitiestickets.length,
+    }));
+  }
 }

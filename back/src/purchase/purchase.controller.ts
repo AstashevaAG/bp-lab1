@@ -1,4 +1,4 @@
-import { Body, Controller, NotFoundException, Param, Put } from '@nestjs/common';
+import { Body, Controller, Param, ParseIntPipe, Put } from '@nestjs/common';
 import { PurchaseService } from './purchase.service';
 
 @Controller('purchase')
@@ -7,12 +7,9 @@ export class PurchaseController {
 
   @Put(':ticketId/amenities')
   async updateAmenities(
-    @Param('ticketId') ticketId: number,
+    @Param('ticketId', ParseIntPipe) ticketId: number,
     @Body('selectedAmenities') selectedAmenities: number[],
   ) {
-    if (!selectedAmenities || selectedAmenities.length === 0) {
-      throw new NotFoundException('No amenities selected.');
-    }
 
     const result = await this.purchaseService.updateAmenities(ticketId, selectedAmenities);
 

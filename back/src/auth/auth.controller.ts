@@ -14,7 +14,6 @@ import { AuthService } from './auth.service'
 import { AuthDto, CreateUserDto } from './dto/auth.dto'
 import { RefreshTokenService } from './refresh-token.service'
 import { CurrentUser } from './decorators/user.decorator'
-import { users } from '@prisma/client'
 import { Auth } from './decorators/auth.decorator'
 
 @Controller('auth')
@@ -71,10 +70,12 @@ export class AuthController {
 	}
 
 	@HttpCode(200)
-	@Auth(['Administrator'])
 	@Post('logout')
-	async logout(@Res({ passthrough: true }) res: Response, @CurrentUser('id') id: number) {
-		console.log(`id: ${id}`)
+	@Auth(['Administrator', 'User'])
+	async logout(
+		@Res({ passthrough: true }) res: Response,
+		@CurrentUser('id') id: number
+	) {
 		await this.authService.logout(id)
 		await this.refreshTokenService.removeRefreshTokenFromResponse(res)
 

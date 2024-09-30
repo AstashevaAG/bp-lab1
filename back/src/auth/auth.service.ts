@@ -117,6 +117,10 @@ export class AuthService {
 		if (!user) {
 			throw new UnauthorizedException('Email or password invalid')
 		}
+
+		if (!user.active) {
+			throw new ForbiddenException('You are not allowed to login!')
+		}
 		const isValid = await verify(user.password, dto.password)
 		if (!isValid) {
 			throw new UnauthorizedException('Email or password invalid')

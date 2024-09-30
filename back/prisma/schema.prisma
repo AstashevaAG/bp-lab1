@@ -31,18 +31,24 @@ model roles {
 }
 
 model user_sessions {
-  id            Int       @id @default(autoincrement())
+  id            Int        @id @default(autoincrement())
   userId        Int
-  loginTime     DateTime  @default(now())
+  loginTime     DateTime   @default(now())
   logoutTime    DateTime?
-  errorOccurred Boolean?  @default(false)
+  errorOccurred Boolean?   @default(false)
   errorMessage  String?
-  users         users     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  crashType     CrashType?
+  users         users      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+enum CrashType {
+  SOFTWARE
+  SYSTEM
 }
 
 model users {
   id        Int             @id @default(autoincrement())
-  roleid    Int             @default(2)
+  roleid    Int?            @default(2)
   email     String          @db.VarChar(150)
   password  String          @db.VarChar(200)
   title     String          @default("user")
@@ -52,7 +58,7 @@ model users {
   birthdate DateTime?       @db.Date
   active    Boolean?
   offices   offices?        @relation(fields: [officeid], references: [id], onUpdate: NoAction)
-  roles     roles           @relation(fields: [roleid], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  roles     roles?          @relation(fields: [roleid], references: [id], onDelete: Cascade, onUpdate: NoAction)
   sessions  user_sessions[]
 
   tickets tickets[] @relation(map: "fk_ticket_user")
@@ -156,16 +162,18 @@ model tickets {
   users             users              @relation(fields: [userid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ticket_user")
 }
 
-
 model Survey {
-  id          Int      @id @default(autoincrement())
-  departure   String
-  arrival     String
-  age         Int
-  gender      String
-  cabinType   String
-  q1          Int
-  q2          Int
-  q3          Int
-  q4          Int
+  id        Int    @id @default(autoincrement())
+  departure String
+  arrival   String
+  age       Int
+  gender    String
+  cabinType String
+  q1        Int
+  q2        Int
+  q3        Int
+  q4        Int
+  month     Int
+  year      Int
+  @@index([month, year])
 }

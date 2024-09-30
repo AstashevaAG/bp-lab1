@@ -9,7 +9,15 @@ export class AmenitiesService {
 		const ticket = await this.prisma.tickets.findUnique({
 			where: { id: ticketId },
 			include: {
-				cabintypes: true,
+				cabintypes: {
+					include: {
+						amenitiescabintype: {
+							include: {
+								amenities: true
+							}
+						}
+					}
+				},
 				amenitiestickets: {
 					include: {
 						amenities: true
@@ -20,6 +28,8 @@ export class AmenitiesService {
 
 		const allAmenities = await this.prisma.amenities.findMany()
 		const selectedAmenities = ticket.amenitiestickets.map(at => at.amenityid)
+		const includedAmenities = ticket.cabintypes.amenitiescabintype.map(act => act.amenities)
+		const includedAmenityIds = includedAmenities.map(a => a.id)
 
 		return {
 			passenger: {
@@ -28,10 +38,13 @@ export class AmenitiesService {
 				passport: ticket.passportnumber,
 				cabinType: ticket.cabintypes.name
 			},
-			amenities: allAmenities.map(amenity => ({
-				...amenity,
-				selected: selectedAmenities.includes(amenity.id)
-			}))
+			amenities: allAmenities
+				.filter(amenity => !includedAmenityIds.includes(amenity.id))
+				.map(amenity => ({
+					...amenity,
+					selected: selectedAmenities.includes(amenity.id)
+				})),
+			includedAmenities: includedAmenities
 		}
 	}
 }
