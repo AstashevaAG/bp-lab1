@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "TexGyreAdventor";
+  src: url("/public/TeXGyreAdventor-Regular.ttf");
+}
+
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px white inset;
+}
+
+input {
+  background-color: #fff !important;
+  color: #000 !important;
+  background-color: transparent !important;
+}
+
+html {
+  background-color: #f1f5f9;
+  font-family: "TexGyreAdventor";
+  font-optical-sizing: auto;
+}
+
+body {
+  font-size: 21px;
+  margin: 0 auto;
+}
+
+input,
+button {
+  font-size: 21px;
+}
+
+h1 {
+  @apply text-5xl;
+}
+
+h2 {
+  @apply text-4xl;
+}

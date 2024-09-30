@@ -1,0 +1,30 @@
+.input-field {
+	@apply w-80 p-2 border rounded focus:outline-none focus:border-blue-500 bg-transparent text-white transition-colors mt-1;
+}
+
+.btn-primary {
+	@apply w-full py-2 text-white font-semibold transition duration-300 ease-in-out mt-1;
+	background-color: #196AA6;
+	font-weight: 700 !important;
+	margin-top: 64px;
+	border-radius: 20px;
+	&:hover {
+		@apply transform scale-105;
+	}
+}
+
+label {
+	color: black;
+	display: flex;
+	gap: 64px;
+	justify-content: space-between;
+	align-items: center;
+}
+
+img {
+	margin-bottom: 73px;
+}
+
+.formContainer {
+	width: 750px;
+}
