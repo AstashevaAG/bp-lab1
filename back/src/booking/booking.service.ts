@@ -14,11 +14,11 @@ export class BookingService {
 			where: {
 				bookingreference: bookingReference,
 				confirmed: true,
-				// schedules: {
-				// 	date: {
-				// 		gte: new Date(Date.now() + 24 * 60 * 60 * 1000)
-				// 	}
-				// }
+				schedules: {
+					date: {
+						gte: new Date(Date.now() + 24 * 60 * 60 * 1000)
+					}
+				}
 			},
 			include: {
 				schedules: {

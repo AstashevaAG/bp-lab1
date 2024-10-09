@@ -143,24 +143,30 @@ export class SurveyService {
 					categoryFilteredSurveys = filteredSurveys.filter(s => s[category] === value)
 				}
 
+				let totalAnswers = 0
 				for (const question of questions) {
 					result[category][value][question] = {}
 					for (let i = 1; i <= 7; i++) {
 						const count = categoryFilteredSurveys.filter(s => s[question] === i).length
 						result[category][value][question][i] = count
+						totalAnswers += count
 					}
 				}
+				result[category][value]['total'] = totalAnswers
 			}
 		}
 
 		result['total'] = {}
+		let grandTotal = 0
 		for (const question of questions) {
 			result['total'][question] = {}
 			for (let i = 1; i <= 7; i++) {
 				const count = filteredSurveys.filter(s => s[question] === i).length
 				result['total'][question][i] = count
+				grandTotal += count
 			}
 		}
+		result['total']['grandTotal'] = grandTotal
 
 		return result
 	}

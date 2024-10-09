@@ -8,4 +8,7 @@ export class AirportsService {
     async getAllAirports() {
         return await this.prisma.airports.findMany()
     }
+    async getAllCountries() {
+        return await this.prisma.countries.findMany()
+    }
 }
